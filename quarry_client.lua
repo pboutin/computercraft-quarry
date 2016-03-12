@@ -22,7 +22,7 @@ function main()
             checkInventory()
             checkFuel()
 
-            local status = getFormattedStatus(count, width * depth + height)
+            local status = getFormattedStatus(count, width * depth * height)
             rednet.broadcast(status)
             term.clear()
             print(status)
@@ -102,16 +102,22 @@ function clearInventory()
 end
 
 function checkFuel()
-    if (turtle.getFuelLevel() < 1000) and (turtle.getItemCount(1) > 1) then
+    local fuelPerShot = 5
+    local fuelQuantity = turtle.getItemCount(1)
+    if (turtle.getFuelLevel() < 500) and (fuelQuantity > 1) then
         turtle.select(1)
-        turtle.refuel(turtle.getItemCount(1) - 1)
+        if fuelQuantity > fuelPerShot then
+            turtle.refuel(fuelPerShot)
+        else
+            turtle.refuel(fuelQuantity - 1)
+        end
     end
 end
 
 function getFormattedStatus(minedBlocs, totalBlocs)
     local message = "quarry_client"
     message = message .. "," .. os.getComputerLabel()
-    message = message .. "," .. turtle.getItemCount(2)
+    message = message .. "," .. turtle.getItemCount(1)
     message = message .. "," .. minedBlocs
     message = message .. "," .. totalBlocs
     return message
