@@ -1,73 +1,100 @@
 rednet.open("right")
 
 function main()
-    print("Specify the width")
+    print("Enter the width")
     local width = tonumber(read())
 
-    print("Specify the depth")
+    print("Enter the depth")
     local depth = tonumber(read())
 
-    local height = 3
+    print("How many layers ? (1 layer = 3 blocs)")
+    local layers = tonumber(read())
+
+    local totalBlocs = width * depth * layers * 3;
 
     local switch = true
-    local count = 0
+    local progress = 1
 
-    for x = 1, width do
-        for y = 1, depth do
-            turtle.digUp()
-            turtle.dig()
-            turtle.digDown()
-            count = count + 3
+    checkFuel()
+    turtle.up()
 
-            checkInventory()
-            checkFuel()
-
-            local status = getFormattedStatus(count, width * depth * height)
-            rednet.broadcast(status)
-            term.clear()
-            print(status)
-
-            turtle.forward()
-        end
-
-        turtle.digUp()
-        turtle.digDown()
-
-        if x < width then
-            if switch then
-                turtle.turnRight()
+    for z = 1, layers do
+        for x = 1, width do
+            for y = 2, depth do
                 turtle.dig()
-                turtle.forward()
-                turtle.turnRight()
-            else
-                turtle.turnLeft()
-                turtle.dig()
-                turtle.forward()
-                turtle.turnLeft()
+                turtle.digUp()
+                turtle.digDown()
+
+                progress = progress + 1
+
+                checkInventory()
+                checkFuel()
+
+                rednet.broadcast(getFormattedStatus(progress * 3, totalBlocs))
+
+                safeForward()
             end
-            count = count + 1
+
+            turtle.digUp()
+            turtle.digDown()
+
+            progress = progress + 1
+
+            if x < width then
+                if switch then
+                    turtle.turnRight()
+                    turtle.dig()
+                    sleep(1)
+                    safeForward()
+                    turtle.turnRight()
+                else
+                    turtle.turnLeft()
+                    turtle.dig()
+                    sleep(1)
+                    safeForward()
+                    turtle.turnLeft()
+                end
+                switch = not switch
+            end
         end
 
-        switch = not switch
+        if z < layers then
+            turtle.turnLeft()
+            turtle.turnLeft()
+            turtle.down()
+            turtle.digDown()
+            turtle.down()
+            turtle.digDown()
+            turtle.down()
+        end
     end
 
     clearInventory()
 
-    if width % 2 == 0 then
-        turtle.turnRight()
-        for i = 1, width - 1 do
-            turtle.forward()
-        end
-    else
-        turtle.turnLeft()
-        for i = 1, width - 1 do
-            turtle.forward()
-        end
-        turtle.turnLeft()
-        for i = 1, depth - 1 do
-            turtle.forward()
+    for i = 2, (layers - 1) * 3 do
+        turtle.up()
+    end
+
+    if layers % 2 == 1 then
+        if width % 2 == 0 then
+            turtle.turnRight()
+            for i = 1, width - 1 do
+                turtle.forward()
+            end
+            turtle.turnLeft()
+        else
+            turtle.turnLeft()
+            for i = 1, width - 1 do
+                turtle.forward()
+            end
+            turtle.turnLeft()
+            for i = 1, depth - 1 do
+                turtle.forward()
+            end
         end
     end
+
+    safeForward()
 end
 
 function checkInventory()
@@ -111,6 +138,13 @@ function checkFuel()
         else
             turtle.refuel(fuelQuantity - 1)
         end
+    end
+end
+
+function safeForward()
+    while not turtle.forward() do
+        turtle.dig()
+        sleep(1)
     end
 end
 
