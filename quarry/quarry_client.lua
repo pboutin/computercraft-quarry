@@ -21,6 +21,7 @@ function main()
     for z = 1, layers do
         for x = 1, width do
             for y = 2, depth do
+                turtle.select(1)
                 turtle.dig()
                 turtle.digUp()
                 turtle.digDown()
@@ -35,6 +36,7 @@ function main()
                 safeForward()
             end
 
+            turtle.select(1)
             turtle.digUp()
             turtle.digDown()
 
